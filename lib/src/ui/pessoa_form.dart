@@ -6,6 +6,13 @@ class TelaPessoa extends StatelessWidget {
   String _title;
   Function(PessoaModel) _onSubmit;
 
+  void finish(GlobalKey<FormState> state) {
+    if (state.currentState.validate()) {
+      state.currentState.save();
+      if (_onSubmit != null) _onSubmit(_pessoa);
+      Navigator.pop(context);
+    }
+
   @override
   Widget build(BuildContext context) {
     var pessoaForm = PessoaForm(_pessoa, _onSubmit);
@@ -20,15 +27,7 @@ class TelaPessoa extends StatelessWidget {
           )
         ],
       ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-        child: SingleChildScrollView(
-          child: Container(
-            child: pessoaForm,
-            height: MediaQuery.of(context).size.height,
-          ),
-        ),
-      ),
+      body: pessoaForm
     );
   }
 
@@ -46,7 +45,6 @@ class PessoaForm extends StatefulWidget {
   PessoaModel _pessoa;
   Function(PessoaModel) _onSubmit;
   PessoaFormState state;
-  ValueKey<FormState> key = ValueKey(FormState());
 
   @override
   PessoaFormState createState() {
@@ -54,12 +52,12 @@ class PessoaForm extends StatefulWidget {
   }
 
   PessoaForm(this._pessoa, this._onSubmit) {
-    state = PessoaFormState(_pessoa, _onSubmit, key);
+    state = PessoaFormState(_pessoa, _onSubmit);
   }
 }
 
 class PessoaFormState extends State<PessoaForm> {
-  ValueKey<FormState> _formKey;
+  GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
   PessoaModel _pessoa;
   Function(PessoaModel) _onSubmit;
   bool _edicao = false;
@@ -67,11 +65,10 @@ class PessoaFormState extends State<PessoaForm> {
   final FocusNode _nameFocus = FocusNode();
   final FocusNode _phoneFocus = FocusNode();
 
-  PessoaFormState(PessoaModel pessoa, Function(PessoaModel) onSubmit, ValueKey<FormState> key) {
+  PessoaFormState(PessoaModel pessoa, Function(PessoaModel) onSubmit) {
     this._pessoa = pessoa == null ? new PessoaModel.vazio() : pessoa;
     this._edicao = pessoa != null;
     this._onSubmit = onSubmit;
-    this._formKey = key;
   }
 
   void _fieldFocusChange(context, FocusNode currentFocus, FocusNode nextFocus) {
@@ -81,8 +78,8 @@ class PessoaFormState extends State<PessoaForm> {
 
   void finish() {
     print(_formKey);
-    if (_formKey.value.validate()) {
-      _formKey.value.save();
+    if (_formKey.currentState.validate()) {
+      _formKey.currentState.save();
       if (_onSubmit != null) _onSubmit(_pessoa);
       Navigator.pop(context);
     }
