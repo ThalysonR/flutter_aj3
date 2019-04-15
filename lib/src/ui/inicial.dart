@@ -1,4 +1,9 @@
+//import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:csv/csv.dart';
+import 'package:esys_flutter_share/esys_flutter_share.dart';
+import 'dart:convert';
 import '../blocs/pessoa_bloc.dart';
 import '../models/pessoa_model.dart';
 import 'pessoa_form.dart';
@@ -10,10 +15,30 @@ class Inicial extends StatelessWidget {
     return Scaffold(
         appBar: AppBar(
           title: Text('Cadastro AJ3'),
+          actions: <Widget>[
+            MaterialButton(
+              onPressed: () async {
+//                Directory tempdir = await getTemporaryDirectory();
+//                print(tempdir.path);
+
+                var first = await bloc.allPessoas.first;
+                var list = List<List<dynamic>>();
+                list.add(["Nome", "Telefone"]);
+                first.forEach((item) {
+                  list.add(item.toList());
+                });
+                String csv = const ListToCsvConverter().convert(list);
+                var encodedList = Utf8Encoder().convert(csv);
+                await Share.file('Lista CSV', 'lista.csv', encodedList, 'text/csv');
+              },
+              child: Icon(Icons.share),
+            )
+          ],
         ),
         body: StreamBuilder(
           stream: bloc.allPessoas,
           builder: (context, AsyncSnapshot<List<PessoaModel>> snapshot) {
+            print(snapshot.hasData);
             if (snapshot.hasData) {
               return buildList(snapshot);
             } else if (snapshot.hasError) {
@@ -25,7 +50,7 @@ class Inicial extends StatelessWidget {
         floatingActionButton: new FloatingActionButton(
           onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) {
             return TelaPessoa(
-              onSubmit: (pessoa) => print("Cadastro: ${pessoa.nome}"),
+              onSubmit: (pessoa) => bloc.addPessoa(pessoa),
             );
           })),
           child: new Icon(Icons.add),

@@ -21,5 +21,11 @@ class PessoaModel {
     _nome = value;
   }
 
+  List<String> toList() {
+    var list = List<String>();
+    list.add(this.nome);
+    list.add(this.telefone);
+    return list;
+  }
 
 }

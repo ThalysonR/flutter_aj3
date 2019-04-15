@@ -1,35 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/pessoa_model.dart';
 
-class TelaPessoa extends StatelessWidget {
+class TelaPessoa extends StatefulWidget {
   PessoaModel _pessoa;
   String _title;
   Function(PessoaModel) _onSubmit;
-
-  void finish(GlobalKey<FormState> state) {
-    if (state.currentState.validate()) {
-      state.currentState.save();
-      if (_onSubmit != null) _onSubmit(_pessoa);
-      Navigator.pop(context);
-    }
-
-  @override
-  Widget build(BuildContext context) {
-    var pessoaForm = PessoaForm(_pessoa, _onSubmit);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_title),
-        actions: <Widget>[
-          new MaterialButton(
-            onPressed: () => pessoaForm.state.finish(),
-            child: Icon(Icons.save),
-          )
-        ],
-      ),
-      body: pessoaForm
-    );
-  }
 
   TelaPessoa(
       {Function(PessoaModel) onSubmit,
@@ -39,50 +14,75 @@ class TelaPessoa extends StatelessWidget {
     this._title = title;
     this._onSubmit = onSubmit;
   }
+
+  @override
+  TelaPessoaState createState() {
+    return TelaPessoaState(_pessoa, _title);
+  }
+}
+
+class TelaPessoaState extends State<TelaPessoa> {
+  final GlobalKey<PessoaFormState> _keyPessoaForm = GlobalKey<PessoaFormState>();
+  PessoaModel _pessoa;
+  String _title;
+  PessoaForm _pessoaForm;
+
+  TelaPessoaState(this._pessoa, this._title);
+
+  void finish() {
+    if(_keyPessoaForm.currentState._formKey.currentState.validate()) {
+      _keyPessoaForm.currentState._formKey.currentState.save();
+      widget._onSubmit(_keyPessoaForm.currentState._pessoa);
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _pessoaForm = PessoaForm(_pessoa, finish, _keyPessoaForm);
+
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(_title),
+          actions: <Widget>[
+            new MaterialButton(
+              onPressed: () => finish(),
+              child: Icon(Icons.save),
+            )
+          ],
+        ),
+        body: _pessoaForm
+    );
+  }
 }
 
 class PessoaForm extends StatefulWidget {
   PessoaModel _pessoa;
-  Function(PessoaModel) _onSubmit;
-  PessoaFormState state;
+  Function _onSubmit;
 
   @override
-  PessoaFormState createState() {
-    return state;
-  }
+  PessoaFormState createState() => PessoaFormState(_pessoa, _onSubmit);
 
-  PessoaForm(this._pessoa, this._onSubmit) {
-    state = PessoaFormState(_pessoa, _onSubmit);
-  }
+  PessoaForm(this._pessoa, this._onSubmit, GlobalKey<PessoaFormState> formStateKey): super(key : formStateKey);
 }
 
 class PessoaFormState extends State<PessoaForm> {
-  GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+  GlobalKey<FormState> _formKey = GlobalKey();
   PessoaModel _pessoa;
-  Function(PessoaModel) _onSubmit;
+  Function _onSubmit;
   bool _edicao = false;
 
   final FocusNode _nameFocus = FocusNode();
   final FocusNode _phoneFocus = FocusNode();
 
-  PessoaFormState(PessoaModel pessoa, Function(PessoaModel) onSubmit) {
+  PessoaFormState(PessoaModel pessoa, this._onSubmit) {
     this._pessoa = pessoa == null ? new PessoaModel.vazio() : pessoa;
     this._edicao = pessoa != null;
-    this._onSubmit = onSubmit;
   }
 
   void _fieldFocusChange(context, FocusNode currentFocus, FocusNode nextFocus) {
     currentFocus.unfocus();
     FocusScope.of(context).requestFocus(nextFocus);
-  }
-
-  void finish() {
-    print(_formKey);
-    if (_formKey.currentState.validate()) {
-      _formKey.currentState.save();
-      if (_onSubmit != null) _onSubmit(_pessoa);
-      Navigator.pop(context);
-    }
   }
 
   @override
@@ -120,7 +120,7 @@ class PessoaFormState extends State<PessoaForm> {
               focusNode: _phoneFocus,
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (term) {
-                finish();
+                _onSubmit();
               },
               decoration: new InputDecoration(hintText: 'Telefone'),
               validator: (value) {

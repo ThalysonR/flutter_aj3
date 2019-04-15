@@ -3,11 +3,12 @@ import 'package:rxdart/rxdart.dart';
 
 class PessoaBloc {
   final _pessoas = [new PessoaModel('Thalyson', '9999-9999'), new PessoaModel('Outro', '8888-8888')];
-  final _pessoasFetcher = PublishSubject<List<PessoaModel>>();
+  final _pessoasFetcher = BehaviorSubject<List<PessoaModel>>();
 
   Observable<List<PessoaModel>> get allPessoas => _pessoasFetcher.stream;
 
   fetchAllPessoas() {
+    print(_pessoas.length);
     _pessoasFetcher.sink.add(_pessoas);
   }
 
