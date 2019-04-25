@@ -1,16 +1,19 @@
-import 'package:rxdart/rxdart.dart';
-import 'dart:io';
+import '../models/pessoa_model.dart';
 
 class PessoaFormBloc {
-  final _photoFetcher = BehaviorSubject<File>();
+  PessoaModel pessoa;
 
-  Observable<File> get photo => _photoFetcher.stream;
-
-  savePhoto(File file) {
-    _photoFetcher.sink.add(file);
+  PessoaFormBloc(PessoaModel pessoa) {
+    reset(pessoa);
   }
 
-  dispose() {
-    _photoFetcher.close();
+  reset(PessoaModel pessoa) {
+    if (pessoa == null) {
+      this.pessoa = PessoaModel.vazio();
+    } else {
+      this.pessoa = pessoa;
+    }
   }
 }
+
+final bloc = PessoaFormBloc(null);

@@ -1,4 +1,4 @@
-//import 'dart:io';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:csv/csv.dart';
@@ -75,24 +75,30 @@ class Inicial extends StatelessWidget {
                 onSubmit: (pessoa) => print("Editar: ${pessoa.nome}"),
               );
             })),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 6.0),
-                  child: Text(
-                    snapshot.data[position].nome,
-                    style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
-                  ),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundImage: () {
+                  if (snapshot.data[position].fotoPath == null) {
+                    return AssetImage('assets/contato.png');
+                  } else {
+                    return FileImage(File(snapshot.data[position].fotoPath));
+                  }
+                }(),
+              ),
+              title: Padding(
+                padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 6.0),
+                child: Text(
+                  snapshot.data[position].nome,
+                  style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12.0, 0, 12.0, 6.0),
-                  child: Text(
-                    snapshot.data[position].telefone,
-                    style: TextStyle(fontSize: 20.0),
-                  ),
-                )
-              ],
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.fromLTRB(12.0, 0, 12.0, 6.0),
+                child: Text(
+                  snapshot.data[position].telefone,
+                  style: TextStyle(fontSize: 20.0),
+                ),
+              ),
             ),
           )
         );
