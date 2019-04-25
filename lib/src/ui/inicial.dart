@@ -7,6 +7,7 @@ import 'dart:convert';
 import '../blocs/pessoa_bloc.dart';
 import '../models/pessoa_model.dart';
 import 'pessoa_form.dart';
+import 'package:open_iconic_flutter/open_iconic_flutter.dart';
 
 class Inicial extends StatelessWidget {
   @override
@@ -32,6 +33,10 @@ class Inicial extends StatelessWidget {
                 await Share.file('Lista CSV', 'lista.csv', encodedList, 'text/csv');
               },
               child: Icon(Icons.share),
+            ),
+            MaterialButton(
+              onPressed: bloc.removeAllPessoas,
+              child: Icon(OpenIconicIcons.trash),
             )
           ],
         ),

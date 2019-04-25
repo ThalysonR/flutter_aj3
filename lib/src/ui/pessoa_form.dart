@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/pessoa_model.dart';
+import 'package:image_picker/image_picker.dart';
+import '../blocs/pessoa_form_bloc.dart';
+import 'dart:io';
 
 class TelaPessoa extends StatefulWidget {
   PessoaModel _pessoa;
@@ -26,6 +29,7 @@ class TelaPessoaState extends State<TelaPessoa> {
   PessoaModel _pessoa;
   String _title;
   PessoaForm _pessoaForm;
+  PessoaFormBloc bloc = new PessoaFormBloc();
 
   TelaPessoaState(this._pessoa, this._title);
 
@@ -51,7 +55,32 @@ class TelaPessoaState extends State<TelaPessoa> {
             )
           ],
         ),
-        body: _pessoaForm
+        body: StreamBuilder(
+          stream: bloc.photo,
+          builder: (context, AsyncSnapshot<File> snapshot, ) {
+            return new SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  InkWell(
+                    onTap: () async {
+                      var picture = await ImagePicker.pickImage(source: ImageSource.camera, maxHeight: 600, maxWidth: 600);
+                      bloc.savePhoto(picture);
+                      print(picture.path);
+                    },
+                    child: () {
+                      if (snapshot.hasData) {
+                        return new Image.file(snapshot.data, height: 250.0, width: 250.0,);
+                      } else {
+                        return new Image.asset('assets/contato.png', height: 250.0, width: 250.0,);
+                      }
+                    }(),
+                  ),
+                  _pessoaForm
+                ],
+              ),
+            );
+          },
+        )
     );
   }
 }
@@ -95,6 +124,7 @@ class PessoaFormState extends State<PessoaForm> {
           new ListTile(
             leading: const Icon(Icons.person),
             title: TextFormField(
+              textCapitalization: TextCapitalization.words,
               enabled: !_edicao,
               initialValue: _pessoa.nome,
               focusNode: _nameFocus,

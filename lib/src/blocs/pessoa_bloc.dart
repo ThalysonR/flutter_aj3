@@ -8,12 +8,16 @@ class PessoaBloc {
   Observable<List<PessoaModel>> get allPessoas => _pessoasFetcher.stream;
 
   fetchAllPessoas() {
-    print(_pessoas.length);
     _pessoasFetcher.sink.add(_pessoas);
   }
 
   addPessoa(PessoaModel pessoa) {
     _pessoas.add(pessoa);
+    fetchAllPessoas();
+  }
+
+  removeAllPessoas() {
+    _pessoas.removeRange(0, this._pessoas.length);
     fetchAllPessoas();
   }
 
