@@ -31,6 +31,10 @@ class PessoaModel {
     return list;
   }
 
+  static List<String> getLabels() {
+    return ['Matrícula', 'Nome', 'Telefone', 'Data de Nascimento', 'Líder'];
+  }
+
   String get nome => _nome;
 
   set nome(String value) {

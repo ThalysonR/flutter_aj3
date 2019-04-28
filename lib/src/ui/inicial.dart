@@ -8,6 +8,9 @@ import '../blocs/pessoa_bloc.dart';
 import '../models/pessoa_model.dart';
 import 'pessoa_form.dart';
 import 'package:open_iconic_flutter/open_iconic_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:archive/archive.dart';
+import 'package:archive/archive_io.dart';
 
 class Inicial extends StatelessWidget {
   @override
@@ -19,18 +22,30 @@ class Inicial extends StatelessWidget {
           actions: <Widget>[
             MaterialButton(
               onPressed: () async {
-//                Directory tempdir = await getTemporaryDirectory();
-//                print(tempdir.path);
+                Directory tempdir = await getTemporaryDirectory();
+                print(tempdir.path);
 
                 var first = await bloc.allPessoas.first;
                 var list = List<List<dynamic>>();
-                list.add(["Nome", "Telefone"]);
+                list.add(PessoaModel.getLabels());
                 first.forEach((item) {
                   list.add(item.toList());
                 });
                 String csv = const ListToCsvConverter().convert(list);
                 var encodedList = Utf8Encoder().convert(csv);
-                await Share.file('Lista CSV', 'lista.csv', encodedList, 'text/csv');
+
+                var pessoaFoto = await first.firstWhere((item) => item.fotoPath != null, orElse: () => PessoaModel.vazio());
+                if (pessoaFoto.fotoPath != null) {
+                  var path = pessoaFoto.fotoPath.substring(0, pessoaFoto.fotoPath.lastIndexOf("/"));
+                  new ZipFileEncoder().zipDirectory(new Directory(path), filename: "${tempdir.path}/fotos.zip");
+
+                  await Share.files('Cadastros', {
+                    'lista.csv': encodedList,
+                    'fotos.zip': File("${tempdir.path}/fotos.zip").readAsBytesSync()
+                  }, '*/*');
+                } else {
+                  await Share.file('Lista CSV', 'lista.csv', encodedList, 'text/csv');
+                }
               },
               child: Icon(Icons.share),
             ),
@@ -72,7 +87,7 @@ class Inicial extends StatelessWidget {
               return TelaPessoa(
                 title: 'Editar',
                 editarPessoa: snapshot.data[position],
-                onSubmit: (pessoa) => print("Editar: ${pessoa.nome}"),
+                onSubmit: (pessoa) => print("Editar: ${pessoa.nome.split(' ')[0]}"),
               );
             })),
             child: ListTile(
