@@ -1,4 +1,17 @@
+import 'dart:convert';
+
+PessoaModel pessoaFromJson(String str) {
+  final jsonData = json.decode(str);
+  return PessoaModel.fromJson(jsonData);
+}
+
+String pessoaToJson(PessoaModel pessoa) {
+  final dyn = pessoa.toJson();
+  return json.encode(dyn);
+}
+
 class PessoaModel {
+  int _id;
   String _matricula;
   String _nome;
   String _telefone;
@@ -6,6 +19,9 @@ class PessoaModel {
   String _lider;
   String _fotoPath;
 
+
+  PessoaModel.withId(this._id, this._matricula, this._nome, this._telefone, this._dtNascimento,
+      this._lider, this._fotoPath);
 
   PessoaModel(this._matricula, this._nome, this._telefone, this._dtNascimento,
       this._lider, this._fotoPath);
@@ -19,6 +35,31 @@ class PessoaModel {
     _fotoPath = null;
   }
 
+  factory PessoaModel.fromJson(Map<String, dynamic> json) => new PessoaModel.withId(
+    json["id"],
+    json["matricula"],
+    json["nome"],
+    json["telefone"],
+    json["data_nascimento"],
+    json["lider"],
+    json["foto_path"]
+  );
+
+  Map<String, dynamic> toJson() => {
+    "id": _id,
+    "matricula": _matricula,
+    "nome": _nome,
+    "telefone": _telefone,
+    "data_nascimento": _dtNascimento,
+    "lider": _lider,
+    "foto_path": _fotoPath
+  };
+
+  int get id => _id;
+
+  set id(int value) {
+    _id = value;
+  }
 
   String get matricula => _matricula;
 

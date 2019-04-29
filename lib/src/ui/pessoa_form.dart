@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
-import '../models/pessoa_model.dart';
-import 'package:image_picker/image_picker.dart';
-import '../blocs/pessoa_form_bloc.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../blocs/pessoa_form_bloc.dart';
+import '../models/pessoa_model.dart';
 
 class TelaPessoa extends StatefulWidget {
   PessoaModel _pessoa;
@@ -34,26 +35,39 @@ class TelaPessoaState extends State<TelaPessoa> {
     bloc.reset(pessoa);
   }
 
+  Future<bool> _onWillPop() {
+    var fotoAtual = bloc.pessoa.fotoPath;
+    print("onWillPop");
+    _limpaFoto(fotoAtual);
+    return Future.value(true);
+  }
+
+  _limpaFoto(String path) {
+    if (path != null && path != 'null' && !path.contains('cadastro')) {
+      File(path).delete();
+    }
+  }
+
   void finish() {
+    print("Save Form");
     if(_keyPessoaForm.currentState._formKey.currentState.validate()) {
       _keyPessoaForm.currentState._formKey.currentState.save();
 
       if (bloc.pessoa.fotoPath != null) {
-//        getApplicationDocumentsDirectory().then((appDir) {
-//          print(appDir.path);
           var picture = File(bloc.pessoa.fotoPath);
-          var path = picture.path.substring(0, picture.path.lastIndexOf("/"));
+          var path = picture.path.substring(0, picture.path.lastIndexOf("/")).replaceAll('/cadastro', '');
           var dir = Directory("$path/cadastro");
           if (!dir.existsSync()) {
             dir.createSync();
           }
           var renamedPic = picture.renameSync("${dir.path}/${bloc.pessoa.nome.split(' ').join('_')}.jpg");
-          bloc.pessoa.fotoPath = renamedPic.path;
+          bloc.setFoto(renamedPic.path);
 
-          widget._onSubmit(bloc.pessoa);
-          Navigator.pop(context);
 //        });
       }
+      widget._onSubmit(bloc.pessoa);
+      print("Pop Context");
+      Navigator.pop(context);
     }
   }
 
@@ -61,36 +75,43 @@ class TelaPessoaState extends State<TelaPessoa> {
   Widget build(BuildContext context) {
     _pessoaForm = PessoaForm(finish, _keyPessoaForm);
 
-    return Scaffold(
-        appBar: AppBar(
-          title: Text(_title),
-          actions: <Widget>[
-            new MaterialButton(
-              onPressed: () => finish(),
-              child: Icon(Icons.save),
-            )
-          ],
-        ),
-        body: new SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              InkWell(
-                onTap: () async {
-                  var picture = await ImagePicker.pickImage(source: ImageSource.camera, maxHeight: 600, maxWidth: 600);
-                  bloc.pessoa.fotoPath = picture.path;
-                },
-                child: () {
-                  if (bloc.pessoa.fotoPath != null) {
-                    return new Image.file(File(bloc.pessoa.fotoPath), height: 250.0, width: 250.0,);
-                  } else {
-                    return new Image.asset('assets/contato.png', height: 250.0, width: 250.0,);
-                  }
-                }(),
-              ),
-              _pessoaForm
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+          appBar: AppBar(
+            title: Text(_title),
+            actions: <Widget>[
+              new MaterialButton(
+                onPressed: () => finish(),
+                child: Icon(Icons.save),
+              )
             ],
           ),
-        )
+          body: new SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                InkWell(
+                  onTap: () async {
+                    var picture = await ImagePicker.pickImage(source: ImageSource.camera, maxHeight: 600, maxWidth: 600);
+                    _limpaFoto(bloc.pessoa.fotoPath);
+                    bloc.setFoto(picture.path);
+                  },
+                  child: StreamBuilder(
+                    stream: bloc.foto,
+                    builder: (context, AsyncSnapshot<String> snapshot) {
+                      if (snapshot.hasData) {
+                        return new Image.file(File(snapshot.data), height: 250.0, width: 250.0,);
+                      } else {
+                        return new Image.asset('assets/contato.png', height: 250.0, width: 250.0,);
+                      }
+                    },
+                  ),
+                ),
+                _pessoaForm
+              ],
+            ),
+          )
+      ),
     );
   }
 }
@@ -191,6 +212,7 @@ class PessoaFormState extends State<PessoaForm> {
             title: TextFormField(
               keyboardType: TextInputType.datetime,
               focusNode: _dateFocus,
+              initialValue: bloc.pessoa.dtNascimento,
               textInputAction: TextInputAction.next,
               onFieldSubmitted: (term) {
                 _fieldFocusChange(context, _dateFocus, _liderFocus);
@@ -211,6 +233,7 @@ class PessoaFormState extends State<PessoaForm> {
             title: TextFormField(
               textCapitalization: TextCapitalization.words,
               focusNode: _liderFocus,
+              initialValue: bloc.pessoa.lider,
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (term) {
                 _onSubmit();
